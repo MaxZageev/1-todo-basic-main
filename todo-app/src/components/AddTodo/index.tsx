@@ -12,7 +12,7 @@ const AddTodo: React.FC<Props> = ({ onAdd }) => {
   const submit = () => {
     const value = text.trim();
     if (!value) {
-      setError('Поле не может быть пустым');
+      setError('Бездельник получается');
       return;
     }
     onAdd(value);
@@ -27,6 +27,7 @@ const AddTodo: React.FC<Props> = ({ onAdd }) => {
         onChange={(e) => { setText(e.target.value); if (error) setError(null); }}
         onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
         label="Новая задача"
+        variant="outlined"
         fullWidth
         error={!!error}
         helperText={error || ' '}

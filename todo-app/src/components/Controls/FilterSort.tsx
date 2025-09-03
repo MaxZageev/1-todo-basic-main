@@ -1,8 +1,9 @@
 import React from 'react';
-import { FormControl, InputLabel, MenuItem, Select, Stack, Switch, FormControlLabel } from '@mui/material';
+import { FormControl, InputLabel, MenuItem, Select, Stack, FormControlLabel } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
 import type { Filter, SortOrder } from '../../types/todo';
 import { useColorMode } from '../../theme/ThemeProvider';
+import ThemeSwitch from './ThemeSwitch'
 
 type Props = {
   filter: Filter;
@@ -37,8 +38,8 @@ const FilterSort: React.FC<Props> = ({ filter, sort, onChangeFilter, onChangeSor
       </FormControl>
 
       <FormControlLabel
-        control={<Switch checked={mode === 'dark'} onChange={toggle} />}
-        label={mode === 'dark' ? 'Тёмная' : 'Светлая'}
+         control={<ThemeSwitch checked={mode === 'dark'} onChange={toggle} />}
+         label={mode === 'dark' ? 'Тёмная' : 'Светлая'}
       />
     </Stack>
   );
