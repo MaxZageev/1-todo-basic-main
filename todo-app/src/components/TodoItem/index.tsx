@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { Checkbox, IconButton, ListItem, ListItemText, TextField, Box, Tooltip } from '@mui/material';
+import {
+  Checkbox,
+  IconButton,
+  ListItem,
+  ListItemText,
+  TextField,
+  Box,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
@@ -15,9 +24,21 @@ type Props = {
   onEdit: (id: string, nextText: string) => void;
 };
 
-const TodoItem: React.FC<Props> = ({ id, text, completed, createdAt, onToggle, onDelete, onEdit }) => {
+const MAX_PREVIEW_HEIGHT = 50; // ограничение высоты текста в пикселях
+
+const TodoItem: React.FC<Props> = ({
+  id,
+  text,
+  completed,
+  createdAt,
+  onToggle,
+  onDelete,
+  onEdit,
+}) => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(text);
+  const [expanded, setExpanded] = useState(false);
+
   const save = () => {
     const val = draft.trim();
     if (val) {
@@ -28,55 +49,107 @@ const TodoItem: React.FC<Props> = ({ id, text, completed, createdAt, onToggle, o
 
   return (
     <ListItem
+      alignItems="flex-start"
       sx={{
         bgcolor: 'background.paper',
         borderRadius: 1,
         mb: 1,
         border: (theme) => `1px solid ${theme.palette.divider}`,
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'flex-start',
       }}
-      secondaryAction={
-        <Box display="flex" gap={0.5}>
-          {!editing ? (
-            <Tooltip title="Редактировать">
-              <IconButton edge="end" onClick={() => setEditing(true)}><EditIcon /></IconButton>
-            </Tooltip>
-          ) : (
-            <>
-              <Tooltip title="Сохранить">
-                <IconButton edge="end" onClick={save}><SaveIcon /></IconButton>
-              </Tooltip>
-              <Tooltip title="Удалить">
-                 <IconButton edge="end" onClick={() => onDelete(id)}><DeleteIcon /></IconButton>
-              </Tooltip>
-              <Tooltip title="Отмена">
-                <IconButton edge="end" onClick={() => { setEditing(false); setDraft(text); }}>
-                  <CloseIcon />
-                </IconButton>
-              </Tooltip>
-            </>
-          )}
-        </Box>
-      }
     >
-      <Checkbox checked={completed} onChange={() => onToggle(id)} />
-      {!editing ? (
-        <ListItemText
-          primary={text}
-          secondary={new Intl.DateTimeFormat(undefined, {
-            dateStyle: 'medium', timeStyle: 'short'
-          }).format(createdAt)}
-          sx={{ textDecoration: completed ? 'line-through' : 'none', opacity: completed ? 0.7 : 1 }}
-        />
-      ) : (
-        <TextField
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') save(); if (e.key === 'Escape') { setEditing(false); setDraft(text); } }}
-          fullWidth
-          size="small"
-          autoFocus
-        />
-      )}
+      <Checkbox checked={completed} onChange={() => onToggle(id)} sx={{ mt: 0.5 }} />
+
+      <Box sx={{ flex: 1, mr: 1 }}>
+        {!editing ? (
+          <>
+            <ListItemText
+              primary={
+                <Typography
+                  component="span"
+                  sx={{
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    maxHeight: expanded ? 'none' : MAX_PREVIEW_HEIGHT,
+                    overflow: 'hidden',
+                    textDecoration: completed ? 'line-through' : 'none',
+                    opacity: completed ? 0.7 : 1,
+                    display: 'block',
+                  }}
+                >
+                  {text}
+                </Typography>
+              }
+              secondary={new Intl.DateTimeFormat(undefined, {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+              }).format(createdAt)}
+            />
+            {text.length > 120 && (
+              <Typography
+                variant="body2"
+                color="primary"
+                sx={{ cursor: 'pointer', mt: 0.5 }}
+                onClick={() => setExpanded(!expanded)}
+              >
+                {expanded ? 'Скрыть' : 'Показать ещё'}
+              </Typography>
+            )}
+          </>
+        ) : (
+          <TextField
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') save();
+              if (e.key === 'Escape') {
+                setEditing(false);
+                setDraft(text);
+              }
+            }}
+            fullWidth
+            size="small"
+            autoFocus
+            multiline
+          />
+        )}
+      </Box>
+
+      <Box display="flex" gap={0.5} alignItems="flex-start">
+        {!editing ? (
+          <Tooltip title="Редактировать">
+            <IconButton edge="end" onClick={() => setEditing(true)}>
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+        ) : (
+          <>
+            <Tooltip title="Сохранить">
+              <IconButton edge="end" onClick={save}>
+                <SaveIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Удалить">
+              <IconButton edge="end" onClick={() => onDelete(id)}>
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Отмена">
+              <IconButton
+                edge="end"
+                onClick={() => {
+                  setEditing(false);
+                  setDraft(text);
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </Tooltip>
+          </>
+        )}
+      </Box>
     </ListItem>
   );
 };
