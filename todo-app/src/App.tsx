@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Container, Paper, Typography, Stack, Divider, Box } from '@mui/material';
-import AddTodo from './components/AddTodo';
-import TodoList from './components/TodoList';
-import FilterSort from './components/Controls/FilterSort';
-import type { Todo, Filter, SortOrder } from './types/todo';
-import { loadTodos, saveTodos } from './utils/localStorage';
+import React, { useEffect, useState } from "react";
+import { Container, Paper, Typography, Stack, Divider, Box } from "@mui/material";
+import AddTodo from "./components/AddTodo";
+import TodoList from "./components/TodoList";
+import FilterSort from "./components/Controls/FilterSort";
+import type { Todo, Filter, SortOrder } from "./types/todo";
+import { loadTodos, saveTodos } from "./utils/localStorage";
 
 function uuid() {
   return crypto.randomUUID?.() ?? Math.random().toString(36).slice(2);
@@ -12,8 +12,8 @@ function uuid() {
 
 const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>(() => loadTodos());
-  const [filter, setFilter] = useState<Filter>('all');
-  const [sort, setSort] = useState<SortOrder>('newFirst');
+  const [filter, setFilter] = useState<Filter>("all");
+  const [sort, setSort] = useState<SortOrder>("newFirst");
 
   useEffect(() => {
     saveTodos(todos);
@@ -37,30 +37,32 @@ const App: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ py: 4, height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Container maxWidth="sm" sx={{ py: 4, height: "100vh", display: "flex", flexDirection: "column" }}>
       <Paper
         elevation={3}
         sx={{
           p: 3,
           flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          bgcolor: "var(--surface)",
+          border: "1px solid var(--border)",
+          color: "var(--text)",
+          transition: "all 0.4s ease-in-out",
         }}
       >
         <Typography variant="h5" fontWeight={700} gutterBottom>
           Todo App Lite
         </Typography>
 
-        {/* Верхушка (форма + фильтры) */}
         <Stack spacing={2} sx={{ flexShrink: 0 }}>
           <AddTodo onAdd={addTodo} />
           <FilterSort filter={filter} sort={sort} onChangeFilter={setFilter} onChangeSort={setSort} />
           <Divider />
         </Stack>
 
-        {/* Список заметок — скроллится отдельно */}
-        <Box sx={{ flex: 1, overflowY: 'auto', mt: 2 }}>
+        <Box sx={{ flex: 1, overflowY: "auto", mt: 2, }}>
           <TodoList items={todos} filter={filter} sort={sort} onToggle={toggle} onDelete={remove} onEdit={edit} />
         </Box>
       </Paper>
