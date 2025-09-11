@@ -7,13 +7,13 @@ import { loadTodos, saveTodos } from "./utils/localStorage";
 import type { Todo, Filter, SortOrder } from "./types/todo";
 
 
-/*function uuid() {
+function uuid() {
   return crypto.randomUUID?.() ?? Math.random().toString(36).slice(2);                                // функция для генерации айдишников ?.() — это optional chaining. 
-}*/
+}
 
                                                                                                       // создание функционального компонента который вернет нам jsx
 const App: React.FC = () => {
-  const uuid = useId;
+  /*const uuid = useId;*/
   const [todos, setTodos] = useState<Todo[]>(() => loadTodos());                                      // создаем стейт для хранения и изменения списка задач, начальное значение берем из локального хранилища
   const [filter, setFilter] = useState<Filter>("all");                                                 
   const [sort, setSort] = useState<SortOrder>("newFirst");                                             

@@ -5,8 +5,8 @@ import darkBg from "../assets/img/darkBg.jpg";
 export const lightTheme: DefaultTheme = {
   mode: "light",
   colors: {
-    background: "#fdfbf8",
-    surface: "rgba(255,255,255,0.7)",
+    background: "#f5feffd8",
+    surface: "rgba(255, 255, 255, 0.54)",
     text: "#3a2f25",
     border: "rgba(120,100,80,0.3)",
     backgroundImage: liteBg,
@@ -23,7 +23,7 @@ export const darkTheme: DefaultTheme = {
     text: "#f0f4f9",
     border: "rgba(200,220,255,0.2)",
     backgroundImage: darkBg,
-    button: "#3a82f6",
-    buttonHover: "#2563eb",
+    button: "#8c3af6ff",
+    buttonHover: "#8c3af6d8",
   },
 };

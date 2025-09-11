@@ -38,12 +38,12 @@ export const AppThemeProvider: React.FC<React.PropsWithChildren> = ({ children }
           text: { primary: scTheme.colors.text },
           primary: { main: scTheme.colors.button },
         },
-        shape: { borderRadius: 12 },
+        shape: { borderRadius: 15 },
         components: {
           MuiPaper: {
             styleOverrides: {
               root: {
-                backdropFilter: "blur(10px)",
+                backdropFilter: "blur(5px)",
                 border: "1px solid var(--border)",
                 transition: "all 0.4s ease-in-out",
               },
