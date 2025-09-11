@@ -4,26 +4,8 @@ import { ThemeProvider as MUIThemeProvider, createTheme, CssBaseline } from "@mu
 import { GlobalStyles } from "./GlobalStyles";
 import { lightTheme, darkTheme } from "./themes";
 import { loadTheme, saveTheme } from "../utils/localStorage";
+import type { ColorModeContext } from "../types/styles";
 
-declare module "styled-components" {
-  export interface DefaultTheme {
-    mode: "light" | "dark";
-    colors: {
-      background: string;
-      surface: string;
-      text: string;
-      border: string;
-      backgroundImage: string;
-      button: string;
-      buttonHover: string;
-    };
-  }
-}
-
-type ColorModeContext = {
-  mode: "light" | "dark";
-  toggle: () => void;
-};
 
 const ColorModeCtx = createContext<ColorModeContext | null>(null);
 

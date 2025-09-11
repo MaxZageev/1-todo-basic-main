@@ -1,19 +1,11 @@
 import React from 'react';
 import { List, Typography } from '@mui/material';
-import TodoItem from '../TodoItem';
-import type { Filter, SortOrder } from '../../types/todo';
-import type { Todo } from '../../types/todo';
+import TodoItem from '../TodoItem/TodoItem';
+import type { Props } from '../../types/props';
 
-type Props = {
-  items: Todo[];
-  filter: Filter;
-  sort: SortOrder;
-  onToggle: (id: string) => void;
-  onDelete: (id: string) => void;
-  onEdit: (id: string, nextText: string) => void;
-};
+type TodoListProps = Pick<Props, 'items' | 'filter' | 'sort' | 'onToggle' | 'onDelete' | 'onEdit'>;
 
-const TodoList: React.FC<Props> = ({ items, filter, sort, onToggle, onDelete, onEdit }) => {
+const TodoList: React.FC<TodoListProps> = ({ items, filter, sort, onToggle, onDelete, onEdit }) => {
   const filtered = items.filter(t => {
     if (filter === 'completed') return t.completed;
     if (filter === 'active') return !t.completed;

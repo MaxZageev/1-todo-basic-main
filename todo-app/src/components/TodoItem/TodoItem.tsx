@@ -13,20 +13,14 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
+import type { Props } from '../../types/props';
 
-type Props = {
-  id: string;
-  text: string;
-  completed: boolean;
-  createdAt: Date;
-  onToggle: (id: string) => void;
-  onDelete: (id: string) => void;
-  onEdit: (id: string, nextText: string) => void;
-};
 
-const MAX_PREVIEW_HEIGHT = 50; // ограничение высоты текста в пикселях
+const MAX_PREVIEW_HEIGHT = 25; // ограничение высоты текста в пикселях
 
-const TodoItem: React.FC<Props> = ({
+type TodoItemProps = Pick<Props, 'id' | 'text' | 'completed' | 'createdAt' | 'onToggle' | 'onDelete' | 'onEdit'>;
+
+const TodoItem: React.FC<TodoItemProps> = ({
   id,
   text,
   completed,

@@ -7,3 +7,6 @@ export interface Todo {
 
 export type Filter = 'all' | 'completed' | 'active';
 export type SortOrder = 'newFirst' | 'oldFirst';
+
+
+
