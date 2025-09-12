@@ -2,22 +2,17 @@ import React from 'react';
 import { List, Typography } from '@mui/material';
 import TodoItem from '../TodoItem/TodoItem';
 import type { TodoListProps } from '../../types/components';
+import { useFilteredSortedTodos } from '../../hooks/useFilteredSortedTodos';
 
+/**
+ * TodoList: Презентационный компонент списка
+ * - Фильтрация/сортировка вынесены в useFilteredSortedTodos
+ */
 const TodoList: React.FC<TodoListProps> = ({ items, filter, sort, onToggle, onDelete, onEdit }) => {
-  const filtered = items.filter(t => {
-    if (filter === 'completed') return t.completed;
-    if (filter === 'active') return !t.completed;
-    return true;
-  });
-
-  const sorted = [...filtered].sort((a, b) => {
-    const aTime = a.createdAt.getTime();
-    const bTime = b.createdAt.getTime();
-    return sort === 'newFirst' ? bTime - aTime : aTime - bTime;
-  });
+  const sorted = useFilteredSortedTodos(items, filter, sort);
 
   if (!sorted.length) {
-    return <Typography sx={{ opacity: 0.7, mt: 2 }}>Пока пусто. Добавь первую задачу — и мир станет лучше</Typography>;
+    return <Typography sx={{ opacity: 0.7, mt: 2 }}>Задач нет. Добавьте первую выше.</Typography>;
   }
 
   return (
@@ -39,3 +34,4 @@ const TodoList: React.FC<TodoListProps> = ({ items, filter, sort, onToggle, onDe
 };
 
 export default TodoList;
+

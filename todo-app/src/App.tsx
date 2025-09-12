@@ -1,43 +1,17 @@
-import React, { useEffect, /*useId,*/ useState } from "react";
+import React from "react";
 import { Container, Paper, Typography, Stack, Divider, Box } from "@mui/material";
 import AddTodo from "./components/AddTodo/AddTodo";
 import TodoList from "./components/TodoList/TodoList";
 import FilterSort from "./components/Controls/FilterSort";
-import { loadTodos, saveTodos } from "./utils/localStorage";
-import type { Todo, Filter, SortOrder } from "./types/todo";
+import { useTodos } from "./hooks/useTodos";
 
-
-function uuid() {
-  return crypto.randomUUID?.() ?? Math.random().toString(36).slice(2);                                // функция для генерации айдишников ?.() — это optional chaining. 
-}
-
-                                                                                                      // создание функционального компонента который вернет нам jsx
+/**
+ * App: Корневой компонент — только композиция UI.
+ * Вся бизнес-логика вынесена в хук useTodos.
+ */
 const App: React.FC = () => {
-  
-  const [todos, setTodos] = useState<Todo[]>(() => loadTodos());                                      // создаем стейт для хранения и изменения списка задач, начальное значение берем из локального хранилища
-  const [filter, setFilter] = useState<Filter>("all");                                                 
-  const [sort, setSort] = useState<SortOrder>("newFirst");                                             
-
-  useEffect(() => {                                                                                   // используем хук для сохранения новых задач после каждой отрисоввки 
-    saveTodos(todos);
-  }, [todos]);
-
-  const addTodo = (text: string) => {                                                                 // функция создающая новый задачу и 
-    const next: Todo = { id: uuid(), text, completed: false, createdAt: new Date() };
-    setTodos((prev) => [next, ...prev]);                                                              // обновляем состояние и добавляем задачу в начало масива
-  };
-
-  const toggle = (id: string) => {
-    setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)));       // ищем обьект по id и создаем новый масив и измененным пераметром
-  };
-
-  const remove = (id: string) => {
-    setTodos((prev) => prev.filter((t) => t.id !== id));                                              // создаем массив без указанной задачи
-  };
-
-  const edit = (id: string, nextText: string) => {
-    setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, text: nextText } : t)));
-  };
+  // Подключаем бизнес-логику из кастомного хука
+  const { todos, filter, sort, setFilter, setSort, addTodo, toggleTodo, removeTodo, editTodo } = useTodos();
 
   return (
     <Container maxWidth="sm" sx={{ py: 4, height: "100vh", display: "flex", flexDirection: "column" }}>
@@ -56,17 +30,27 @@ const App: React.FC = () => {
         }}
       >
         <Typography variant="h5" fontWeight={700} gutterBottom>
-          Todo App 
+          Todo App
         </Typography>
 
         <Stack spacing={2} sx={{ flexShrink: 0 }}>
+          {/* Форма добавления задачи (обработчики — из хука useTodos) */}
           <AddTodo onAdd={addTodo} />
+          {/* Управление фильтром и сортировкой */}
           <FilterSort filter={filter} sort={sort} onChangeFilter={setFilter} onChangeSort={setSort} />
           <Divider />
         </Stack>
 
-        <Box sx={{ flex: 1, overflowY: "auto", mt: 2, }}>
-          <TodoList items={todos} filter={filter} sort={sort} onToggle={toggle} onDelete={remove} onEdit={edit} />
+        <Box sx={{ flex: 1, overflowY: "auto", mt: 2 }}>
+          {/* Список задач (операции — из хука useTodos) */}
+          <TodoList
+            items={todos}
+            filter={filter}
+            sort={sort}
+            onToggle={toggleTodo}
+            onDelete={removeTodo}
+            onEdit={editTodo}
+          />
         </Box>
       </Paper>
     </Container>
@@ -74,3 +58,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+
