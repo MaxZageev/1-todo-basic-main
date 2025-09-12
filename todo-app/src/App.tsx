@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useState } from "react";
+import React, { useEffect, /*useId,*/ useState } from "react";
 import { Container, Paper, Typography, Stack, Divider, Box } from "@mui/material";
 import AddTodo from "./components/AddTodo/AddTodo";
 import TodoList from "./components/TodoList/TodoList";
@@ -13,7 +13,7 @@ function uuid() {
 
                                                                                                       // создание функционального компонента который вернет нам jsx
 const App: React.FC = () => {
-  /*const uuid = useId;*/
+  
   const [todos, setTodos] = useState<Todo[]>(() => loadTodos());                                      // создаем стейт для хранения и изменения списка задач, начальное значение берем из локального хранилища
   const [filter, setFilter] = useState<Filter>("all");                                                 
   const [sort, setSort] = useState<SortOrder>("newFirst");                                             
