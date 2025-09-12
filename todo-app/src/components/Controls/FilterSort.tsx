@@ -4,9 +4,7 @@ import type { SelectChangeEvent } from '@mui/material';
 import type { Filter, SortOrder } from '../../types/todo';
 import { useColorMode } from '../../theme/ThemeProvider';
 import ThemeSwitch from '../UI/ThemeSwitch'
-import type { Props } from '../../types/props';
-
-type FilterSortProps = Pick<Props, 'filter' | 'sort' | 'onChangeFilter' | 'onChangeSort'>;
+import type { FilterSortProps } from '../../types/components';
 
 const FilterSort: React.FC<FilterSortProps> = ({ filter, sort, onChangeFilter, onChangeSort }) => {
   const { mode, toggle } = useColorMode();

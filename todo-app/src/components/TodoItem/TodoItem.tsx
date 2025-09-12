@@ -13,12 +13,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
-import type { Props } from '../../types/props';
+import type { TodoItemProps } from '../../types/components';
 
 
 const MAX_PREVIEW_HEIGHT = 25; // ограничение высоты текста в пикселях
 
-type TodoItemProps = Pick<Props, 'id' | 'text' | 'completed' | 'createdAt' | 'onToggle' | 'onDelete' | 'onEdit'>;
+// Props type moved to src/types/components.ts
 
 const TodoItem: React.FC<TodoItemProps> = ({
   id,

@@ -1,9 +1,7 @@
 import React from 'react';
 import { List, Typography } from '@mui/material';
 import TodoItem from '../TodoItem/TodoItem';
-import type { Props } from '../../types/props';
-
-type TodoListProps = Pick<Props, 'items' | 'filter' | 'sort' | 'onToggle' | 'onDelete' | 'onEdit'>;
+import type { TodoListProps } from '../../types/components';
 
 const TodoList: React.FC<TodoListProps> = ({ items, filter, sort, onToggle, onDelete, onEdit }) => {
   const filtered = items.filter(t => {

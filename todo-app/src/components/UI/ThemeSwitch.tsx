@@ -2,7 +2,7 @@ import React from 'react';
 import { styled } from '@mui/material/styles';
 import Switch from '@mui/material/Switch';
 import type { SwitchProps } from '@mui/material/Switch';
-import type { Props } from '../../types/props'; 
+import type { ThemeSwitchProps } from '../../types/components';
 
 const MaterialUISwitch = styled(Switch)<SwitchProps>(({ theme }) => ({
   width: 62,
@@ -60,7 +60,7 @@ const MaterialUISwitch = styled(Switch)<SwitchProps>(({ theme }) => ({
   },
 }));
  
-type ThemeSwitchProps = Pick<Props, 'checked' | 'onChange' >
+// Props type moved to src/types/components.ts
 
 const ThemeSwitch: React.FC<ThemeSwitchProps> = ({ checked, onChange }) => (
   <MaterialUISwitch checked={checked} onChange={(e) => onChange(e.target.checked)} />

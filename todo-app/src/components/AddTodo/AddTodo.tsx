@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Button, TextField } from '@mui/material';
 import AddBoxIcon from '@mui/icons-material/AddBox';
-import type { Props } from '../../types/props';
-
-type AddTodoProps = Pick<Props, 'onAdd'>;
+import type { AddTodoProps } from '../../types/components';
 
 const AddTodo: React.FC<AddTodoProps> = ({ onAdd }) => {
   const [text, setText] = useState('');
