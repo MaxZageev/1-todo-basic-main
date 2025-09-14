@@ -6,11 +6,11 @@ import type { Filter, SortOrder } from '../types/todo';
  */
 export function useFilterSortHandlers(
   onChangeFilter: (f: Filter) => void,
+  sort: SortOrder,
   onChangeSort: (s: SortOrder) => void,
 ) {
   const handleFilter = (e: SelectChangeEvent) => onChangeFilter(e.target.value as Filter);
-  const handleSort = (e: SelectChangeEvent) => onChangeSort(e.target.value as SortOrder);
+  const toggleSort = () => onChangeSort(sort === 'newFirst' ? 'oldFirst' : 'newFirst');
 
-  return { handleFilter, handleSort };
+  return { handleFilter, toggleSort };
 }
-
