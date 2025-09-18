@@ -1,7 +1,11 @@
-import type { DefaultTheme } from "styled-components";
+﻿import type { DefaultTheme } from "styled-components";
 import liteBg from "../assets/img/liteBg.jpg";
 import darkBg from "../assets/img/darkBg.jpg";
 
+/**
+ * Описания светлой и тёмной тем: храним базовые цвета и фоновые изображения.
+ * Эти объекты попадают в Styled Components и через CSS-переменные используются по всему приложению.
+ */
 export const lightTheme: DefaultTheme = {
   mode: "light",
   colors: {

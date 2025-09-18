@@ -1,3 +1,6 @@
+﻿/**
+ * Расширяем декларацию styled-components, чтобы тема знала о своих полях.
+ */
 declare module "styled-components" {
   export interface DefaultTheme {
     mode: "light" | "dark";
@@ -13,6 +16,9 @@ declare module "styled-components" {
   }
 }
 
+/**
+ * Контекст смены темы: пара значений для провайдера AppThemeProvider.
+ */
 export type ColorModeContext = {
   mode: "light" | "dark";
   toggle: () => void;

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Checkbox, IconButton, ListItem, ListItemText, TextField, Box, Tooltip, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -7,13 +7,14 @@ import CloseIcon from '@mui/icons-material/Close';
 import type { TodoItemProps } from '../../types/components';
 import { useTodoItem } from '../../hooks/useTodoItem';
 
-const MAX_PREVIEW_HEIGHT = 25; // Максимальная высота превью текста
+const MAX_PREVIEW_HEIGHT = 25; // Ограничение высоты текста, пока карточка «свёрнута»
 
 /**
- * TodoItem: Презентационный компонент элемента списка
- * - Логика редактирования вынесена в useTodoItem
+ * Компонент TodoItem: отдельная карточка задачи с режимом просмотра и редактирования.
+ * Состояние редактирования, черновик текста и раскрытие длинного описания хранит хук useTodoItem.
  */
 const TodoItem: React.FC<TodoItemProps> = ({ id, text, completed, createdAt, onToggle, onDelete, onEdit }) => {
+  // Достаём из хука все управляющие флаги и обработчики для карточки
   const { editing, draft, expanded, setDraft, startEdit, cancelEdit, save, toggleExpanded, handleKeyDown } = useTodoItem(
     text,
     (next) => onEdit(id, next)
@@ -32,12 +33,13 @@ const TodoItem: React.FC<TodoItemProps> = ({ id, text, completed, createdAt, onT
         alignItems: 'flex-start',
       }}
     >
-      {/* Переключатель выполнено/не выполнено */}
+      {/* Чекбокс завершённости */}
       <Checkbox checked={completed} onChange={() => onToggle(id)} sx={{ mt: 0.5 }} />
 
       <Box sx={{ flex: 1, mr: 1 }}>
         {!editing ? (
           <>
+            {/* Просмотр задачи */}
             <ListItemText
               primary={
                 <Typography
@@ -57,6 +59,8 @@ const TodoItem: React.FC<TodoItemProps> = ({ id, text, completed, createdAt, onT
               }
               secondary={new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(createdAt)}
             />
+
+            {/* Кнопка «развернуть/свернуть» появляется только для длинных описаний */}
             {text.length > 120 && (
               <Typography variant="body2" color="primary" sx={{ cursor: 'pointer', mt: 0.5 }} onClick={toggleExpanded}>
                 {expanded ? 'Скрыть' : 'Показать полностью'}
@@ -64,6 +68,7 @@ const TodoItem: React.FC<TodoItemProps> = ({ id, text, completed, createdAt, onT
             )}
           </>
         ) : (
+          // Режим редактирования
           <TextField
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
@@ -108,4 +113,3 @@ const TodoItem: React.FC<TodoItemProps> = ({ id, text, completed, createdAt, onT
 };
 
 export default TodoItem;
-

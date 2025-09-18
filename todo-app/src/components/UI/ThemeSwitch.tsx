@@ -1,9 +1,10 @@
-import React from 'react';
+﻿import React from 'react';
 import { styled } from '@mui/material/styles';
 import Switch from '@mui/material/Switch';
 import type { SwitchProps } from '@mui/material/Switch';
 import type { ThemeSwitchProps } from '../../types/components';
 
+// Кастомизируем стандартный MUI Switch под светлую/тёмную темы
 const MaterialUISwitch = styled(Switch)<SwitchProps>(({ theme }) => ({
   width: 62,
   height: 34,
@@ -59,9 +60,10 @@ const MaterialUISwitch = styled(Switch)<SwitchProps>(({ theme }) => ({
     }),
   },
 }));
- 
-// Props type moved to src/types/components.ts
 
+/**
+ * ThemeSwitch: обёртка над кастомным слайдером, приводящая его к простому интерфейсу checked/onChange.
+ */
 const ThemeSwitch: React.FC<ThemeSwitchProps> = ({ checked, onChange }) => (
   <MaterialUISwitch checked={checked} onChange={(e) => onChange(e.target.checked)} />
 );

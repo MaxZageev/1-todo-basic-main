@@ -1,3 +1,7 @@
+﻿/**
+ * Глобальные стили приложения: подхватывают палитру активной темы и обновляют CSS-переменные.
+ * Используется Styled Components, поэтому шаблон внедряет цвета напрямую из объекта `theme`.
+ */
 import { createGlobalStyle } from "styled-components";
 
 export const GlobalStyles = createGlobalStyle`
@@ -5,6 +9,7 @@ export const GlobalStyles = createGlobalStyle`
   * { box-sizing: border-box; }
   body {
     margin: 0;
+    /* Общий фон и картинка берутся из темы, чтобы синхронно менять оформление */
     background: ${({ theme }) => theme.colors.background} url(${({ theme }) =>
       theme.colors.backgroundImage}) no-repeat center center fixed;
     background-size: cover;

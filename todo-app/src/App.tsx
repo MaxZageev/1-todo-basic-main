@@ -1,3 +1,7 @@
+﻿/**
+ * Главный модуль приложения: инициализирует темы и выводит интерфейс списка задач.
+ * Vite использует этот файл как единственную точку входа (см. index.html).
+ */
 import React from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { Container, Paper, Typography, Stack, Divider, Box } from "@mui/material";
@@ -12,6 +16,25 @@ declare global {
     __APP_ROOT__?: Root;
   }
 }
+
+/**
+ * Возвращает (или создаёт) единственный экземпляр React Root.
+ * Это позволяет переживать HMR и повторные импорты без повторного монтирования.
+ */
+const ensureRoot = (): Root => {
+  if (window.__APP_ROOT__) {
+    return window.__APP_ROOT__;
+  }
+
+  const container = document.getElementById("root");
+
+  if (!container) {
+    throw new Error("Корневой контейнер #root не найден в документе");
+  }
+
+  window.__APP_ROOT__ = createRoot(container);
+  return window.__APP_ROOT__;
+};
 
 const App: React.FC = () => {
   const { todos, filter, sort, setFilter, setSort, addTodo, toggleTodo, removeTodo, editTodo } = useTodos();
@@ -36,12 +59,14 @@ const App: React.FC = () => {
           Todo App
         </Typography>
 
+        {/* Панель управления: добавление задач, фильтр и сортировка */}
         <Stack spacing={2} sx={{ flexShrink: 0 }}>
           <AddTodo onAdd={addTodo} />
           <FilterSort filter={filter} sort={sort} onChangeFilter={setFilter} onChangeSort={setSort} />
           <Divider />
         </Stack>
 
+        {/* Основная часть: список задач с действиями */}
         <Box sx={{ flex: 1, overflowY: "auto", mt: 2 }}>
           <TodoList
             items={todos}
@@ -57,16 +82,8 @@ const App: React.FC = () => {
   );
 };
 
-const rootElement = document.getElementById("root");
-
-if (!rootElement) {
-  throw new Error("Failed to find root element");
-}
-
-const root = window.__APP_ROOT__ ?? createRoot(rootElement);
-window.__APP_ROOT__ = root;
-
-root.render(
+// Запускаем приложение под обёрткой темы и строгого режима React.
+ensureRoot().render(
   <React.StrictMode>
     <AppThemeProvider>
       <App />
