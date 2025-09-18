@@ -1,13 +1,13 @@
 /**
- * Точка входа приложения: инициализация дерева React.
- * Vite монтирует её в корневой элемент (т.е. index.html).
+ * Точка входа клиента: монтируем дерево React в #root.
  */
 import React from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { Container, Paper, Typography, Stack, Divider, Box, LinearProgress, Pagination, Alert } from "@mui/material";
+import { Container, Paper, Typography, Stack, Divider, Box, LinearProgress, Alert } from "@mui/material";
 import AddTodo from "./components/AddTodo/AddTodo";
 import TodoList from "./components/TodoList/TodoList";
 import FilterSort from "./components/Controls/FilterSort";
+import PaginationControls from "./components/PaginationControls/PaginationControls";
 import { AppThemeProvider } from "./theme/ThemeProvider";
 import { useTodos } from "./hooks/useTodos";
 
@@ -17,10 +17,6 @@ declare global {
   }
 }
 
-/**
- * Проверяем (или создаём) корневой контейнер React.
- * Нужно для корректной работы HMR и повторного рендера.
- */
 const ensureRoot = (): Root => {
   if (window.__APP_ROOT__) {
     return window.__APP_ROOT__;
@@ -29,12 +25,14 @@ const ensureRoot = (): Root => {
   const container = document.getElementById("root");
 
   if (!container) {
-    throw new Error("Контейнер элемента #root не найден в документе");
+    throw new Error("Элемент с id #root не найден");
   }
 
   window.__APP_ROOT__ = createRoot(container);
   return window.__APP_ROOT__;
 };
+
+const LIMIT_OPTIONS = [5, 10, 20];
 
 const App: React.FC = () => {
   const {
@@ -57,8 +55,7 @@ const App: React.FC = () => {
     error,
   } = useTodos();
 
-  const safeTotalPages = Math.max(totalPages, 1);
-  const safePage = Math.min(page, safeTotalPages);
+  const pageForControls = Math.min(page, Math.max(totalPages, 1));
 
   return (
     <Container maxWidth="sm" sx={{ py: 4, height: "100vh", display: "flex", flexDirection: "column" }}>
@@ -87,10 +84,8 @@ const App: React.FC = () => {
           <FilterSort
             filter={filter}
             sort={sort}
-            limit={limit}
             onChangeFilter={setFilter}
             onChangeSort={setSort}
-            onChangeLimit={setLimit}
           />
           <Divider />
         </Stack>
@@ -112,26 +107,17 @@ const App: React.FC = () => {
           />
         </Box>
 
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          spacing={2}
-          alignItems="center"
-          justifyContent={{ xs: "center", sm: "space-between" }}
-          sx={{ mt: 2 }}
-        >
-          <Pagination
-            count={safeTotalPages}
-            page={safePage}
-            onChange={(_, value) => setPage(value)}
-            color="primary"
-            showFirstButton
-            showLastButton
-            disabled={totalPages <= 1}
+        <Box sx={{ mt: 2, justifyContent: "center"}}>
+          <PaginationControls
+            page={pageForControls}
+            total={total}
+            totalPages={totalPages}
+            limit={limit}
+            limitOptions={LIMIT_OPTIONS}
+            onChangePage={setPage}
+            onChangeLimit={setLimit}
           />
-          <Typography variant="body2" sx={{ opacity: 0.8 }}>
-            Страница {safePage} из {safeTotalPages} • Всего задач: {total}
-          </Typography>
-        </Stack>
+        </Box>
       </Paper>
     </Container>
   );

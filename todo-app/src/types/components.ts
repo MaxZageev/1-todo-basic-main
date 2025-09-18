@@ -1,7 +1,7 @@
-﻿import type { Todo, Filter, SortOrder } from './todo';
+import type { Todo, Filter, SortOrder } from './todo';
 
 /**
- * Пропсы для переключателя темы: упрощённый интерфейс поверх кастомного Switch.
+ * Пропсы компонента переключателя темы.
  */
 export interface ThemeSwitchProps {
   checked: boolean;
@@ -9,19 +9,17 @@ export interface ThemeSwitchProps {
 }
 
 /**
- * Пропсы панели фильтра/сортировки: текущие значения и события изменения.
+ * Пропсы панели фильтра и сортировки.
  */
 export interface FilterSortProps {
   filter: Filter;
   sort: SortOrder;
-  limit: number;
   onChangeFilter: (f: Filter) => void;
   onChangeSort: (s: SortOrder) => void;
-  onChangeLimit: (limit: number) => void;
 }
 
 /**
- * Пропсы отдельного элемента списка задач.
+ * Пропсы одной карточки задачи.
  */
 export interface TodoItemProps {
   id: string;
@@ -34,14 +32,14 @@ export interface TodoItemProps {
 }
 
 /**
- * Пропсы формы добавления задачи: достаточно колбэка onAdd.
+ * Пропсы формы добавления задачи.
  */
 export interface AddTodoProps {
   onAdd: (text: string) => void;
 }
 
 /**
- * Пропсы списка задач: готовые данные плюс обработчики для элементов.
+ * Пропсы списка задач.
  */
 export interface TodoListProps {
   items: Todo[];
@@ -50,4 +48,17 @@ export interface TodoListProps {
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (id: string, nextText: string) => void;
+}
+
+/**
+ * Пропсы панели пагинации.
+ */
+export interface PaginationControlsProps {
+  page: number;
+  total: number;
+  totalPages: number;
+  limit: number;
+  limitOptions: number[];
+  onChangePage: (page: number) => void;
+  onChangeLimit: (limit: number) => void;
 }

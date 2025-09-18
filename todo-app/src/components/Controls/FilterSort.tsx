@@ -9,15 +9,13 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 
 /**
  * Компонент FilterSort: панель управления списком задач.
- * Здесь меняем фильтр, порядок сортировки и используем переключатель темы.
+ * Позволяет менять фильтр, порядок сортировки и переключать тему интерфейса.
  */
-const LIMIT_OPTIONS = [5, 10, 20];
-
-const FilterSort: React.FC<FilterSortProps> = ({ filter, sort, limit, onChangeFilter, onChangeSort, onChangeLimit }) => {
+const FilterSort: React.FC<FilterSortProps> = ({ filter, sort, onChangeFilter, onChangeSort }) => {
   // Считываем текущую тему и переключатель из контекста ThemeProvider
   const { mode, toggle } = useColorMode();
-  // Собираем обработчики, чтобы не засорять JSX логикой
-  const { handleFilter, toggleSort, handleLimit } = useFilterSortHandlers(onChangeFilter, sort, onChangeSort, onChangeLimit);
+  // Получаем готовые обработчики, чтобы JSX оставался компактным
+  const { handleFilter, toggleSort } = useFilterSortHandlers(onChangeFilter, sort, onChangeSort);
 
   return (
     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
@@ -31,19 +29,7 @@ const FilterSort: React.FC<FilterSortProps> = ({ filter, sort, limit, onChangeFi
         </Select>
       </FormControl>
 
-      {/* Количество задач на странице */}
-      <FormControl size="small" sx={{ minWidth: 160 }}>
-        <InputLabel id="limit-label">На странице</InputLabel>
-        <Select labelId="limit-label" label="На странице" value={limit.toString()} onChange={handleLimit}>
-          {LIMIT_OPTIONS.map((option) => (
-            <MenuItem key={option} value={option.toString()}>
-              {option}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
-      {/* Кнопка сортировки по дате создания */}
+      {/* Кнопка переключения направления сортировки по дате */}
       <Button
         variant="outlined"
         size="small"
