@@ -14,8 +14,10 @@ export interface ThemeSwitchProps {
 export interface FilterSortProps {
   filter: Filter;
   sort: SortOrder;
+  limit: number;
   onChangeFilter: (f: Filter) => void;
   onChangeSort: (s: SortOrder) => void;
+  onChangeLimit: (limit: number) => void;
 }
 
 /**

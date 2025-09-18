@@ -10,27 +10,28 @@ import {
 } from '../api/todos';
 
 /**
- * useTodos: основной хук для работы с задачами.
- * Теперь совмещаем локальный кэш (localStorage) с серверным API и сохраняем старый интерфейс для компонентов.
+ * useTodos: базовый хук для всей работы со списком.
+ * Совмещает локальный кэш (localStorage) и запросы к серверу с учётом пагинации.
  */
-const DEFAULT_PAGE = 1; // При первом запросе берём самую свежую страницу
-const DEFAULT_LIMIT = 100; // Этого лимита достаточно для типичных сценариев; при необходимости легко увеличить
-const DEFAULT_API_FILTER: Filter = 'all'; // На сервер просим все задачи, фильтрация на клиенте осталась прежней
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 10;
 
 export function useTodos() {
-  // Загружаем последнее локальное состояние, чтобы интерфейс не мигал до ответа сервера
   const [todos, setTodos] = useState<Todo[]>(() => loadTodos());
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilterState] = useState<Filter>('all');
   const [sort, setSort] = useState<SortOrder>('newFirst');
-  const [isLoading, setIsLoading] = useState(false); // Флаг первой загрузки с бэкенда
-  const [error, setError] = useState<string | null>(null); // Сообщение об ошибке последней операции
+  const [page, setPageState] = useState<number>(DEFAULT_PAGE);
+  const [limit, setLimitState] = useState<number>(DEFAULT_LIMIT);
+  const [total, setTotal] = useState<number>(todos.length);
+  const [totalPages, setTotalPages] = useState<number>(Math.max(Math.ceil(todos.length / DEFAULT_LIMIT), 1));
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState(0); // увеличиваем, когда нужно принудительно обновить данные
 
-  // Любые изменения задач зеркалим в localStorage (быстрый кэш и офлайн-режим)
   useEffect(() => {
     saveTodos(todos);
   }, [todos]);
 
-  // Унифицированный обработчик ошибок: приводим сообщение к понятному виду и сохраняем в состоянии
   const handleError = useCallback((err: unknown, fallback: string) => {
     if (err instanceof Error && err.message) {
       setError(err.message);
@@ -39,36 +40,76 @@ export function useTodos() {
     }
   }, []);
 
-  // Подтягиваем задачи с сервера: очищаем ошибку, показываем индикатор загрузки и нормализуем ответ
-  const syncTodos = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const { data } = await fetchTodosApi(DEFAULT_PAGE, DEFAULT_LIMIT, DEFAULT_API_FILTER);
+      const { data, total: serverTotal, totalPages: serverTotalPages, page: serverPage } = await fetchTodosApi(page, limit, filter);
+
+      setTotal(serverTotal);
+      setTotalPages(serverTotalPages);
+
+      if (serverTotalPages > 0 && page > serverTotalPages) {
+        setPageState(serverTotalPages);
+        return;
+      }
+
+      if (serverTotalPages === 0) {
+        setTodos([]);
+        if (page !== DEFAULT_PAGE) {
+          setPageState(DEFAULT_PAGE);
+        }
+        return;
+      }
+
       setTodos(data);
+      setPageState(serverPage);
     } catch (err) {
       handleError(err, 'Не удалось загрузить список задач');
     } finally {
       setIsLoading(false);
     }
-  }, [handleError]);
+  }, [page, limit, filter, handleError]);
 
-  // При первом монтировании получаем актуальное состояние с сервера
   useEffect(() => {
-    void syncTodos();
-  }, [syncTodos]);
+    void fetchData();
+  }, [fetchData, refreshToken]);
 
-  // Добавление задач: отправляем текст на сервер и сразу подмешиваем ответ в начало списка
+  const triggerRefresh = useCallback(() => {
+    setRefreshToken((prev) => prev + 1);
+  }, []);
+
+  const setFilter = useCallback((next: Filter) => {
+    setFilterState(next);
+    setPageState(DEFAULT_PAGE);
+  }, []);
+
+  const setLimit = useCallback((nextLimit: number) => {
+    setLimitState(nextLimit);
+    setPageState(DEFAULT_PAGE);
+  }, []);
+
+  const setPage = useCallback((nextPage: number) => {
+    setPageState(nextPage);
+  }, []);
+
   const addTodo = useCallback((text: string) => {
     setError(null);
     createTodoApi(text)
       .then((created) => {
-        setTodos((prev) => [created, ...prev]);
+        if (page === DEFAULT_PAGE) {
+          setTodos((prev) => {
+            const next = [created, ...prev];
+            return next.length > limit ? next.slice(0, limit) : next;
+          });
+          triggerRefresh();
+        } else {
+          setPageState(DEFAULT_PAGE);
+        }
       })
       .catch((err) => handleError(err, 'Не удалось создать задачу'));
-  }, [handleError]);
+  }, [handleError, page, limit, triggerRefresh]);
 
-  // Переключение completed: используем ответ сервера, чтобы не разъехались статусы
   const toggleTodo = useCallback((id: string) => {
     setError(null);
     toggleTodoApi(id)
@@ -78,17 +119,26 @@ export function useTodos() {
       .catch((err) => handleError(err, 'Не удалось переключить задачу'));
   }, [handleError]);
 
-  // Удаление: после успешного запроса фильтруем локальное состояние
   const removeTodo = useCallback((id: string) => {
     setError(null);
     deleteTodoApi(id)
       .then(() => {
-        setTodos((prev) => prev.filter((t) => t.id !== id));
+        let movedToPrevPage = false;
+        setTodos((prev) => {
+          const next = prev.filter((t) => t.id !== id);
+          if (next.length === 0 && page > DEFAULT_PAGE) {
+            movedToPrevPage = true;
+            setPageState(page - 1);
+          }
+          return next;
+        });
+        if (!movedToPrevPage) {
+          triggerRefresh();
+        }
       })
       .catch((err) => handleError(err, 'Не удалось удалить задачу'));
-  }, [handleError]);
+  }, [handleError, page, triggerRefresh]);
 
-  // Редактирование: обновляем текст или completed и заменяем элемент на вариант с сервера
   const editTodo = useCallback((id: string, nextText: string) => {
     setError(null);
     updateTodoApi(id, { text: nextText })
@@ -98,19 +148,43 @@ export function useTodos() {
       .catch((err) => handleError(err, 'Не удалось обновить задачу'));
   }, [handleError]);
 
-  // Возвращаем хук в прежнем формате, добавив служебные поля для возможного UI-индикатора
   return useMemo(() => ({
     todos,
     filter,
     sort,
+    page,
+    limit,
+    total,
+    totalPages,
     setFilter,
     setSort,
+    setPage,
+    setLimit,
     addTodo,
     toggleTodo,
     removeTodo,
     editTodo,
     isLoading,
     error,
-    reload: syncTodos,
-  }), [todos, filter, sort, setFilter, setSort, addTodo, toggleTodo, removeTodo, editTodo, isLoading, error, syncTodos]);
+    reload: triggerRefresh,
+  }), [
+    todos,
+    filter,
+    sort,
+    page,
+    limit,
+    total,
+    totalPages,
+    setFilter,
+    setSort,
+    setPage,
+    setLimit,
+    addTodo,
+    toggleTodo,
+    removeTodo,
+    editTodo,
+    isLoading,
+    error,
+    triggerRefresh,
+  ]);
 }

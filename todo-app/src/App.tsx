@@ -1,10 +1,10 @@
-﻿/**
- * Главный модуль приложения: инициализирует темы и выводит интерфейс списка задач.
- * Vite использует этот файл как единственную точку входа (см. index.html).
+/**
+ * Точка входа приложения: инициализация дерева React.
+ * Vite монтирует её в корневой элемент (т.е. index.html).
  */
 import React from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { Container, Paper, Typography, Stack, Divider, Box } from "@mui/material";
+import { Container, Paper, Typography, Stack, Divider, Box, LinearProgress, Pagination, Alert } from "@mui/material";
 import AddTodo from "./components/AddTodo/AddTodo";
 import TodoList from "./components/TodoList/TodoList";
 import FilterSort from "./components/Controls/FilterSort";
@@ -18,8 +18,8 @@ declare global {
 }
 
 /**
- * Возвращает (или создаёт) единственный экземпляр React Root.
- * Это позволяет переживать HMR и повторные импорты без повторного монтирования.
+ * Проверяем (или создаём) корневой контейнер React.
+ * Нужно для корректной работы HMR и повторного рендера.
  */
 const ensureRoot = (): Root => {
   if (window.__APP_ROOT__) {
@@ -29,7 +29,7 @@ const ensureRoot = (): Root => {
   const container = document.getElementById("root");
 
   if (!container) {
-    throw new Error("Корневой контейнер #root не найден в документе");
+    throw new Error("Контейнер элемента #root не найден в документе");
   }
 
   window.__APP_ROOT__ = createRoot(container);
@@ -37,7 +37,28 @@ const ensureRoot = (): Root => {
 };
 
 const App: React.FC = () => {
-  const { todos, filter, sort, setFilter, setSort, addTodo, toggleTodo, removeTodo, editTodo } = useTodos();
+  const {
+    todos,
+    filter,
+    sort,
+    page,
+    limit,
+    total,
+    totalPages,
+    setFilter,
+    setSort,
+    setPage,
+    setLimit,
+    addTodo,
+    toggleTodo,
+    removeTodo,
+    editTodo,
+    isLoading,
+    error,
+  } = useTodos();
+
+  const safeTotalPages = Math.max(totalPages, 1);
+  const safePage = Math.min(page, safeTotalPages);
 
   return (
     <Container maxWidth="sm" sx={{ py: 4, height: "100vh", display: "flex", flexDirection: "column" }}>
@@ -59,14 +80,27 @@ const App: React.FC = () => {
           Todo App
         </Typography>
 
-        {/* Панель управления: добавление задач, фильтр и сортировка */}
+        {isLoading && <LinearProgress sx={{ mb: 2, borderRadius: 1 }} />}
+
         <Stack spacing={2} sx={{ flexShrink: 0 }}>
           <AddTodo onAdd={addTodo} />
-          <FilterSort filter={filter} sort={sort} onChangeFilter={setFilter} onChangeSort={setSort} />
+          <FilterSort
+            filter={filter}
+            sort={sort}
+            limit={limit}
+            onChangeFilter={setFilter}
+            onChangeSort={setSort}
+            onChangeLimit={setLimit}
+          />
           <Divider />
         </Stack>
 
-        {/* Основная часть: список задач с действиями */}
+        {error && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {error}
+          </Alert>
+        )}
+
         <Box sx={{ flex: 1, overflowY: "auto", mt: 2 }}>
           <TodoList
             items={todos}
@@ -77,12 +111,32 @@ const App: React.FC = () => {
             onEdit={editTodo}
           />
         </Box>
+
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={2}
+          alignItems="center"
+          justifyContent={{ xs: "center", sm: "space-between" }}
+          sx={{ mt: 2 }}
+        >
+          <Pagination
+            count={safeTotalPages}
+            page={safePage}
+            onChange={(_, value) => setPage(value)}
+            color="primary"
+            showFirstButton
+            showLastButton
+            disabled={totalPages <= 1}
+          />
+          <Typography variant="body2" sx={{ opacity: 0.8 }}>
+            Страница {safePage} из {safeTotalPages} • Всего задач: {total}
+          </Typography>
+        </Stack>
       </Paper>
     </Container>
   );
 };
 
-// Запускаем приложение под обёрткой темы и строгого режима React.
 ensureRoot().render(
   <React.StrictMode>
     <AppThemeProvider>
