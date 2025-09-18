@@ -43,8 +43,6 @@ export interface AddTodoProps {
  */
 export interface TodoListProps {
   items: Todo[];
-  filter: Filter;
-  sort: SortOrder;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (id: string, nextText: string) => void;

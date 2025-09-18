@@ -55,8 +55,6 @@ const App: React.FC = () => {
     error,
   } = useTodos();
 
-  const pageForControls = Math.min(page, Math.max(totalPages, 1));
-
   return (
     <Container maxWidth="sm" sx={{ py: 4, height: "100vh", display: "flex", flexDirection: "column" }}>
       <Paper
@@ -99,17 +97,15 @@ const App: React.FC = () => {
         <Box sx={{ flex: 1, overflowY: "auto", mt: 2 }}>
           <TodoList
             items={todos}
-            filter={filter}
-            sort={sort}
             onToggle={toggleTodo}
             onDelete={removeTodo}
             onEdit={editTodo}
           />
         </Box>
 
-        <Box sx={{ mt: 2, justifyContent: "center"}}>
+        <Box sx={{ mt: 2 }}>
           <PaginationControls
-            page={pageForControls}
+            page={page}
             total={total}
             totalPages={totalPages}
             limit={limit}

@@ -10,27 +10,26 @@ import {
 } from '../api/todos';
 
 /**
- * useTodos: базовый хук для всей работы со списком.
- * Совмещает локальный кэш (localStorage) и запросы к серверу с учётом пагинации.
+ * useTodos: базовый хук для работы со всеми задачами.
+ * Достаём данные из localStorage для мгновенного отображения и синхронизируемся с сервером.
  */
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
+const API_FETCH_LIMIT = 1000; // Максимум объектов, которые запрашиваем с сервера за раз
 
 export function useTodos() {
-  const [todos, setTodos] = useState<Todo[]>(() => loadTodos());
+  const [allTodos, setAllTodos] = useState<Todo[]>(() => loadTodos());
   const [filter, setFilterState] = useState<Filter>('all');
-  const [sort, setSort] = useState<SortOrder>('newFirst');
+  const [sort, setSortState] = useState<SortOrder>('newFirst');
   const [page, setPageState] = useState<number>(DEFAULT_PAGE);
   const [limit, setLimitState] = useState<number>(DEFAULT_LIMIT);
-  const [total, setTotal] = useState<number>(todos.length);
-  const [totalPages, setTotalPages] = useState<number>(Math.max(Math.ceil(todos.length / DEFAULT_LIMIT), 1));
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [refreshToken, setRefreshToken] = useState(0); // увеличиваем, когда нужно принудительно обновить данные
+  const [refreshToken, setRefreshToken] = useState(0); // Инкрементируем, чтобы принудительно обновить данные
 
   useEffect(() => {
-    saveTodos(todos);
-  }, [todos]);
+    saveTodos(allTodos);
+  }, [allTodos]);
 
   const handleError = useCallback((err: unknown, fallback: string) => {
     if (err instanceof Error && err.message) {
@@ -44,32 +43,14 @@ export function useTodos() {
     setIsLoading(true);
     setError(null);
     try {
-      const { data, total: serverTotal, totalPages: serverTotalPages, page: serverPage } = await fetchTodosApi(page, limit, filter);
-
-      setTotal(serverTotal);
-      setTotalPages(serverTotalPages);
-
-      if (serverTotalPages > 0 && page > serverTotalPages) {
-        setPageState(serverTotalPages);
-        return;
-      }
-
-      if (serverTotalPages === 0) {
-        setTodos([]);
-        if (page !== DEFAULT_PAGE) {
-          setPageState(DEFAULT_PAGE);
-        }
-        return;
-      }
-
-      setTodos(data);
-      setPageState(serverPage);
+      const { data } = await fetchTodosApi(DEFAULT_PAGE, API_FETCH_LIMIT, 'all');
+      setAllTodos(data);
     } catch (err) {
       handleError(err, 'Не удалось загрузить список задач');
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, filter, handleError]);
+  }, [handleError]);
 
   useEffect(() => {
     void fetchData();
@@ -84,37 +65,68 @@ export function useTodos() {
     setPageState(DEFAULT_PAGE);
   }, []);
 
+  const setSort = useCallback((next: SortOrder) => {
+    setSortState(next);
+    setPageState(DEFAULT_PAGE);
+  }, []);
+
   const setLimit = useCallback((nextLimit: number) => {
     setLimitState(nextLimit);
     setPageState(DEFAULT_PAGE);
   }, []);
 
   const setPage = useCallback((nextPage: number) => {
-    setPageState(nextPage);
+    setPageState(Math.max(nextPage, 1));
   }, []);
+
+  // Сначала фильтруем весь массив задач, а затем сортируем его, чтобы порядок применялся ко всему списку,
+  // независимо от выбранной страницы. Уже после этого массив режется на «страницы».
+  const processedTodos = useMemo(() => {
+    const filtered = allTodos.filter((todo) => {
+      if (filter === 'completed') return todo.completed;
+      if (filter === 'active') return !todo.completed;
+      return true;
+    });
+
+    const sortedList = [...filtered].sort((a, b) => {
+      const aTime = a.createdAt.getTime();
+      const bTime = b.createdAt.getTime();
+      return sort === 'newFirst' ? bTime - aTime : aTime - bTime;
+    });
+
+    return sortedList;
+  }, [allTodos, filter, sort]);
+
+  const totalFiltered = processedTodos.length;
+  const totalPages = Math.max(Math.ceil(totalFiltered / limit), 1);
+  const currentPage = Math.min(Math.max(page, DEFAULT_PAGE), totalPages);
+
+  useEffect(() => {
+    if (page !== currentPage) {
+      setPageState(currentPage);
+    }
+  }, [page, currentPage]);
+
+  const paginatedTodos = useMemo(() => {
+    const start = (currentPage - 1) * limit;
+    return processedTodos.slice(start, start + limit);
+  }, [processedTodos, currentPage, limit]);
 
   const addTodo = useCallback((text: string) => {
     setError(null);
     createTodoApi(text)
       .then((created) => {
-        if (page === DEFAULT_PAGE) {
-          setTodos((prev) => {
-            const next = [created, ...prev];
-            return next.length > limit ? next.slice(0, limit) : next;
-          });
-          triggerRefresh();
-        } else {
-          setPageState(DEFAULT_PAGE);
-        }
+        setAllTodos((prev) => [created, ...prev]);
+        setPageState(DEFAULT_PAGE);
       })
       .catch((err) => handleError(err, 'Не удалось создать задачу'));
-  }, [handleError, page, limit, triggerRefresh]);
+  }, [handleError]);
 
   const toggleTodo = useCallback((id: string) => {
     setError(null);
     toggleTodoApi(id)
       .then((updated) => {
-        setTodos((prev) => prev.map((t) => (t.id === id ? updated : t)));
+        setAllTodos((prev) => prev.map((t) => (t.id === id ? updated : t)));
       })
       .catch((err) => handleError(err, 'Не удалось переключить задачу'));
   }, [handleError]);
@@ -123,38 +135,27 @@ export function useTodos() {
     setError(null);
     deleteTodoApi(id)
       .then(() => {
-        let movedToPrevPage = false;
-        setTodos((prev) => {
-          const next = prev.filter((t) => t.id !== id);
-          if (next.length === 0 && page > DEFAULT_PAGE) {
-            movedToPrevPage = true;
-            setPageState(page - 1);
-          }
-          return next;
-        });
-        if (!movedToPrevPage) {
-          triggerRefresh();
-        }
+        setAllTodos((prev) => prev.filter((t) => t.id !== id));
       })
       .catch((err) => handleError(err, 'Не удалось удалить задачу'));
-  }, [handleError, page, triggerRefresh]);
+  }, [handleError]);
 
   const editTodo = useCallback((id: string, nextText: string) => {
     setError(null);
     updateTodoApi(id, { text: nextText })
       .then((updated) => {
-        setTodos((prev) => prev.map((t) => (t.id === id ? updated : t)));
+        setAllTodos((prev) => prev.map((t) => (t.id === id ? updated : t)));
       })
       .catch((err) => handleError(err, 'Не удалось обновить задачу'));
   }, [handleError]);
 
   return useMemo(() => ({
-    todos,
+    todos: paginatedTodos,
     filter,
     sort,
-    page,
+    page: currentPage,
     limit,
-    total,
+    total: totalFiltered,
     totalPages,
     setFilter,
     setSort,
@@ -168,12 +169,12 @@ export function useTodos() {
     error,
     reload: triggerRefresh,
   }), [
-    todos,
+    paginatedTodos,
     filter,
     sort,
-    page,
+    currentPage,
     limit,
-    total,
+    totalFiltered,
     totalPages,
     setFilter,
     setSort,
