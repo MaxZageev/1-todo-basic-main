@@ -1,10 +1,14 @@
-﻿import React from 'react';
+﻿// Кастомный переключатель светлой/тёмной темы.
+// Использует MUI Switch и стилизует его под дизайн приложения.
+import React from 'react';
 import { styled } from '@mui/material/styles';
 import Switch from '@mui/material/Switch';
 import type { SwitchProps } from '@mui/material/Switch';
 import type { ThemeSwitchProps } from '../../types/components';
 
-// Кастомизируем стандартный MUI Switch под светлую/тёмную темы
+// Кастомизируем стандартный MUI Switch под светлую/тёмную темы.
+// В стилях используются SVG-иконки и цвета для разных режимов.
+// ВНИМАНИЕ: theme.applyStyles должен быть реализован в вашей теме, иначе будет ошибка!
 const MaterialUISwitch = styled(Switch)<SwitchProps>(({ theme }) => ({
   width: 62,
   height: 34,
@@ -16,11 +20,13 @@ const MaterialUISwitch = styled(Switch)<SwitchProps>(({ theme }) => ({
     '&.Mui-checked': {
       color: '#fff',
       transform: 'translateX(22px)',
+      // Иконка для тёмной темы
       '& .MuiSwitch-thumb:before': {
         backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="20" width="20" viewBox="0 0 20 20"><path fill="${encodeURIComponent(
           '#fff',
         )}" d="M4.2 2.5l-.7 1.8-1.8.7 1.8.7.7 1.8.6-1.8L6.7 5l-1.9-.7-.6-1.8zm15 8.3a6.7 6.7 0 11-6.6-6.6 5.8 5.8 0 006.6 6.6z"/></svg>')`,
       },
+      // Цвет трека для тёмной темы
       '& + .MuiSwitch-track': {
         opacity: 1,
         backgroundColor: '#aab4be',
@@ -34,6 +40,7 @@ const MaterialUISwitch = styled(Switch)<SwitchProps>(({ theme }) => ({
     backgroundColor: '#001e3c',
     width: 32,
     height: 32,
+    // Иконка для светлой темы
     '&::before': {
       content: "''",
       position: 'absolute',
@@ -63,6 +70,7 @@ const MaterialUISwitch = styled(Switch)<SwitchProps>(({ theme }) => ({
 
 /**
  * ThemeSwitch: обёртка над кастомным слайдером, приводящая его к простому интерфейсу checked/onChange.
+ * Используется для переключения темы интерфейса (светлая/тёмная).
  */
 const ThemeSwitch: React.FC<ThemeSwitchProps> = ({ checked, onChange }) => (
   <MaterialUISwitch checked={checked} onChange={(e) => onChange(e.target.checked)} />

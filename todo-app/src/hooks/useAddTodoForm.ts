@@ -1,4 +1,6 @@
-﻿import { useCallback, useState } from 'react';
+﻿// Хук для управления формой добавления задачи.
+// Следит за текстом, ошибками и предоставляет обработчики для компонента AddTodo.
+import { useCallback, useState } from 'react';
 
 /**
  * useAddTodoForm: управляет состоянием формы добавления задачи.

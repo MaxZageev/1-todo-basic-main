@@ -1,4 +1,6 @@
-﻿import React from 'react';
+﻿// Компонент для добавления новой задачи.
+// Использует хук useAddTodoForm для управления состоянием и обработкой ввода.
+import React from 'react';
 import { Box, Button, TextField } from '@mui/material';
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import type { AddTodoProps } from '../../types/components';

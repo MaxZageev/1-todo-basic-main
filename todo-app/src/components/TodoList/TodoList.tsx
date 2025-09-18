@@ -8,6 +8,7 @@ import type { TodoListProps } from '../../types/components';
  */
 const TodoList: React.FC<TodoListProps> = ({ items, onToggle, onDelete, onEdit }) => {
   if (!items.length) {
+    // Если задач нет, выводим подсказку
     return <Typography sx={{ opacity: 0.7, mt: 2 }}>Задач нет. Добавьте новую.</Typography>;
   }
 

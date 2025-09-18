@@ -1,3 +1,5 @@
+// Главный хук для работы со всеми задачами приложения.
+// Управляет загрузкой, фильтрацией, сортировкой, пагинацией и CRUD-операциями.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { loadTodos, saveTodos } from '../utils/localStorage';
 import type { Todo, Filter, SortOrder } from '../types/todo';
@@ -18,6 +20,7 @@ const DEFAULT_LIMIT = 10;
 const API_FETCH_LIMIT = 1000; // Максимум объектов, которые запрашиваем с сервера за раз
 
 export function useTodos() {
+  // Состояния: все задачи, фильтр, сортировка, страница, лимит, загрузка, ошибка
   const [allTodos, setAllTodos] = useState<Todo[]>(() => loadTodos());
   const [filter, setFilterState] = useState<Filter>('all');
   const [sort, setSortState] = useState<SortOrder>('newFirst');
@@ -28,9 +31,11 @@ export function useTodos() {
   const [refreshToken, setRefreshToken] = useState(0); // Инкрементируем, чтобы принудительно обновить данные
 
   useEffect(() => {
+    // Сохраняем задачи в localStorage при каждом изменении
     saveTodos(allTodos);
   }, [allTodos]);
 
+  // Обработчик ошибок: сохраняет текст ошибки для отображения
   const handleError = useCallback((err: unknown, fallback: string) => {
     if (err instanceof Error && err.message) {
       setError(err.message);
@@ -39,6 +44,7 @@ export function useTodos() {
     }
   }, []);
 
+  // Загрузка задач с сервера
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -53,13 +59,16 @@ export function useTodos() {
   }, [handleError]);
 
   useEffect(() => {
+    // Загружаем задачи при инициализации и обновлении refreshToken
     void fetchData();
   }, [fetchData, refreshToken]);
 
+  // Функция для принудительного обновления данных
   const triggerRefresh = useCallback(() => {
     setRefreshToken((prev) => prev + 1);
   }, []);
 
+  // Обработчики смены фильтра, сортировки, лимита, страницы
   const setFilter = useCallback((next: Filter) => {
     setFilterState(next);
     setPageState(DEFAULT_PAGE);
@@ -97,21 +106,25 @@ export function useTodos() {
     return sortedList;
   }, [allTodos, filter, sort]);
 
+  // Пагинация: вычисляем текущую страницу и количество задач
   const totalFiltered = processedTodos.length;
   const totalPages = Math.max(Math.ceil(totalFiltered / limit), 1);
   const currentPage = Math.min(Math.max(page, DEFAULT_PAGE), totalPages);
 
   useEffect(() => {
+    // Корректируем страницу, если она вышла за пределы
     if (page !== currentPage) {
       setPageState(currentPage);
     }
   }, [page, currentPage]);
 
+  // Нарезаем задачи на страницы
   const paginatedTodos = useMemo(() => {
     const start = (currentPage - 1) * limit;
     return processedTodos.slice(start, start + limit);
   }, [processedTodos, currentPage, limit]);
 
+  // CRUD-операции: добавление, переключение, удаление, редактирование задачи
   const addTodo = useCallback((text: string) => {
     setError(null);
     createTodoApi(text)

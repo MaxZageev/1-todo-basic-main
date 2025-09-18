@@ -23,3 +23,6 @@ export type ColorModeContext = {
   mode: "light" | "dark";
   toggle: () => void;
 };
+
+// Типы для описания темы оформления и контекста смены темы.
+// Используются для типизации ThemeProvider и Styled Components.

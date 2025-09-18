@@ -1,4 +1,6 @@
-﻿import React from 'react';
+﻿// Карточка отдельной задачи.
+// Позволяет переключать статус, редактировать текст, удалять задачу и разворачивать длинное описание.
+import React from 'react';
 import { Checkbox, IconButton, ListItem, ListItemText, TextField, Box, Tooltip, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';

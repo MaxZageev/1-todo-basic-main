@@ -1,3 +1,5 @@
+// Хук для генерации обработчиков фильтрации и сортировки.
+// Упрощает работу с Select и кнопкой сортировки в панели управления.
 import type { SelectChangeEvent } from '@mui/material';
 import type { Filter, SortOrder } from '../types/todo';
 

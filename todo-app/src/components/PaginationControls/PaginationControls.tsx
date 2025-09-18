@@ -1,3 +1,5 @@
+// Компонент для управления пагинацией списка задач.
+// Позволяет выбрать страницу и количество задач на странице.
 import React from 'react';
 import { Box, TablePagination } from '@mui/material';
 import type { PaginationControlsProps } from '../../types/components';
@@ -18,6 +20,7 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
   const clampedPage = Math.min(page, safeTotalPages);
   const pageIndex = Math.max(clampedPage - 1, 0);
 
+  // Обработчик смены страницы
   const handleChangePage = (
     _: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLButtonElement> | null,
     nextPage: number,
@@ -25,10 +28,12 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
     onChangePage(nextPage + 1);
   };
 
+  // Обработчик смены лимита задач на странице
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     onChangeLimit(Number(event.target.value));
   };
 
+  // Форматируем отображение диапазона задач
   const labelDisplayedRows = ({ from, to, count }: { from: number; to: number; count: number }) => {
     if (count === 0) {
       return 'Задач нет';

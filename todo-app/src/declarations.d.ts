@@ -1,3 +1,5 @@
+// Декларации модулей для поддержки импортов изображений (jpg, png, svg) в TypeScript.
+
 declare module '*.jpg' {
   const value: string;
   export default value;

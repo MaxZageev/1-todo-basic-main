@@ -1,6 +1,7 @@
 ﻿/**
- * Провайдер тем оформления: объединяет Styled Components и MUI, хранит выбор светлой/тёмной темы.
- * Здесь же лежит контекст `useColorMode`, позволяющий переключать тему из любых компонентов.
+ * Провайдер темы оформления приложения.
+ * Обеспечивает переключение светлой/тёмной темы и синхронизацию с localStorage.
+ * Объединяет Styled Components и MUI для единого оформления.
  */
 import React, { createContext, useContext, useMemo, useRef, useState, useEffect } from "react";
 import { ThemeProvider as SCThemeProvider } from "styled-components";

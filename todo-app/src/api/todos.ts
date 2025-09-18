@@ -1,3 +1,5 @@
+// Модуль для работы с сервером задач через HTTP API.
+// Здесь описаны все методы для загрузки, создания, обновления, удаления и переключения задач.
 import axios from 'axios';
 import type { Filter, Todo } from '../types/todo';
 import type { PaginatedTodos, PaginatedTodosResponse, ServerTodo } from '../types/api';

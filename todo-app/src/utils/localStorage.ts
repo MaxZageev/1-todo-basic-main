@@ -1,5 +1,8 @@
 ﻿import type { Todo } from '../types/todo';
 
+// Утилиты для сохранения и загрузки задач и темы из localStorage.
+// Позволяют хранить состояние между перезагрузками страницы.
+
 const TODOS_KEY = 'todos';
 const THEME_KEY = 'theme'; // значение хранится как 'light' или 'dark'
 

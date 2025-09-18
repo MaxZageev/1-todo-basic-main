@@ -1,3 +1,5 @@
+// Панель управления фильтрацией, сортировкой и темой приложения.
+// Позволяет выбрать статус задач, порядок сортировки и переключить светлую/тёмную тему.
 import React from 'react';
 import { FormControl, InputLabel, MenuItem, Select, Stack, FormControlLabel, Button } from '@mui/material';
 import { useColorMode } from '../../theme/ThemeProvider';

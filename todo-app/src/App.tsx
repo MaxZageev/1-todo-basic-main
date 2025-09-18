@@ -1,5 +1,8 @@
 /**
- * Точка входа клиента: монтируем дерево React в #root.
+ * Главный компонент приложения Todo.
+ * Здесь собирается всё дерево интерфейса: добавление задач, фильтрация, список, пагинация и обработка ошибок.
+ * Вся бизнес-логика работы с задачами реализована через хук useTodos.
+ * Оформление и тема управляются через AppThemeProvider.
  */
 import React from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -12,11 +15,13 @@ import { AppThemeProvider } from "./theme/ThemeProvider";
 import { useTodos } from "./hooks/useTodos";
 
 declare global {
+  // Глобальное свойство для хранения корня React (используется для повторного рендера)
   interface Window {
     __APP_ROOT__?: Root;
   }
 }
 
+// Функция для инициализации корня React (монтирует приложение в #root)
 const ensureRoot = (): Root => {
   if (window.__APP_ROOT__) {
     return window.__APP_ROOT__;
@@ -35,24 +40,25 @@ const ensureRoot = (): Root => {
 const LIMIT_OPTIONS = [5, 10, 20];
 
 const App: React.FC = () => {
+  // Хук useTodos возвращает все данные и методы для работы со списком задач
   const {
-    todos,
-    filter,
-    sort,
-    page,
-    limit,
-    total,
-    totalPages,
-    setFilter,
-    setSort,
-    setPage,
-    setLimit,
-    addTodo,
-    toggleTodo,
-    removeTodo,
-    editTodo,
-    isLoading,
-    error,
+    todos,         // Массив задач для текущей страницы
+    filter,        // Активный фильтр (все/выполненные/активные)
+    sort,          // Порядок сортировки (новые/старые)
+    page,          // Текущая страница
+    limit,         // Количество задач на странице
+    total,         // Всего задач после фильтрации
+    totalPages,    // Всего страниц
+    setFilter,     // Смена фильтра
+    setSort,       // Смена порядка сортировки
+    setPage,       // Смена страницы
+    setLimit,      // Смена лимита задач на странице
+    addTodo,       // Добавить новую задачу
+    toggleTodo,    // Переключить статус задачи
+    removeTodo,    // Удалить задачу
+    editTodo,      // Редактировать задачу
+    isLoading,     // Флаг загрузки данных
+    error,         // Сообщение об ошибке
   } = useTodos();
 
   return (
@@ -71,14 +77,18 @@ const App: React.FC = () => {
           transition: "all 0.4s ease-in-out",
         }}
       >
+        {/* Заголовок приложения */}
         <Typography variant="h5" fontWeight={700} gutterBottom>
           Todo App
         </Typography>
 
+        {/* Индикатор загрузки задач с сервера */}
         {isLoading && <LinearProgress sx={{ mb: 2, borderRadius: 1 }} />}
 
         <Stack spacing={2} sx={{ flexShrink: 0 }}>
+          {/* Форма добавления новой задачи */}
           <AddTodo onAdd={addTodo} />
+          {/* Панель фильтрации, сортировки и переключения темы */}
           <FilterSort
             filter={filter}
             sort={sort}
@@ -88,12 +98,14 @@ const App: React.FC = () => {
           <Divider />
         </Stack>
 
+        {/* Вывод ошибки, если что-то пошло не так */}
         {error && (
           <Alert severity="error" sx={{ mt: 2 }}>
             {error}
           </Alert>
         )}
 
+        {/* Список задач с возможностью редактирования, удаления и переключения статуса */}
         <Box sx={{ flex: 1, overflowY: "auto", mt: 2 }}>
           <TodoList
             items={todos}
@@ -103,6 +115,7 @@ const App: React.FC = () => {
           />
         </Box>
 
+        {/* Панель пагинации: выбор страницы и количества задач на странице */}
         <Box sx={{ mt: 2 }}>
           <PaginationControls
             page={page}
@@ -119,6 +132,7 @@ const App: React.FC = () => {
   );
 };
 
+// Монтируем приложение в #root с поддержкой темы оформления
 ensureRoot().render(
   <React.StrictMode>
     <AppThemeProvider>

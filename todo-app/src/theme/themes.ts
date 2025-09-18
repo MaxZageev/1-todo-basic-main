@@ -1,4 +1,6 @@
-﻿import type { DefaultTheme } from "styled-components";
+﻿// Описание светлой и тёмной темы приложения.
+// Содержит цвета, фоновые изображения и используется для оформления через ThemeProvider.
+import type { DefaultTheme } from "styled-components";
 import liteBg from "../assets/img/liteBg.jpg";
 import darkBg from "../assets/img/darkBg.jpg";
 
