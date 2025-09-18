@@ -1,16 +1,19 @@
 import React from "react";
+import { createRoot, type Root } from "react-dom/client";
 import { Container, Paper, Typography, Stack, Divider, Box } from "@mui/material";
 import AddTodo from "./components/AddTodo/AddTodo";
 import TodoList from "./components/TodoList/TodoList";
 import FilterSort from "./components/Controls/FilterSort";
+import { AppThemeProvider } from "./theme/ThemeProvider";
 import { useTodos } from "./hooks/useTodos";
 
-/**
- * App: Корневой компонент — только композиция UI.
- * Вся бизнес-логика вынесена в хук useTodos.
- */
+declare global {
+  interface Window {
+    __APP_ROOT__?: Root;
+  }
+}
+
 const App: React.FC = () => {
-  // Подключаем бизнес-логику из кастомного хука
   const { todos, filter, sort, setFilter, setSort, addTodo, toggleTodo, removeTodo, editTodo } = useTodos();
 
   return (
@@ -34,15 +37,12 @@ const App: React.FC = () => {
         </Typography>
 
         <Stack spacing={2} sx={{ flexShrink: 0 }}>
-          {/* Форма добавления задачи (обработчики — из хука useTodos) */}
           <AddTodo onAdd={addTodo} />
-          {/* Управление фильтром и сортировкой */}
           <FilterSort filter={filter} sort={sort} onChangeFilter={setFilter} onChangeSort={setSort} />
           <Divider />
         </Stack>
 
         <Box sx={{ flex: 1, overflowY: "auto", mt: 2 }}>
-          {/* Список задач (операции — из хука useTodos) */}
           <TodoList
             items={todos}
             filter={filter}
@@ -57,5 +57,21 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+const rootElement = document.getElementById("root");
 
+if (!rootElement) {
+  throw new Error("Failed to find root element");
+}
+
+const root = window.__APP_ROOT__ ?? createRoot(rootElement);
+window.__APP_ROOT__ = root;
+
+root.render(
+  <React.StrictMode>
+    <AppThemeProvider>
+      <App />
+    </AppThemeProvider>
+  </React.StrictMode>
+);
+
+export default App;
