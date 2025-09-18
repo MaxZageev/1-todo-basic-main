@@ -1,50 +1,104 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { loadTodos, saveTodos } from '../utils/localStorage';
 import type { Todo, Filter, SortOrder } from '../types/todo';
+import {
+  fetchTodos as fetchTodosApi,
+  createTodo as createTodoApi,
+  updateTodo as updateTodoApi,
+  deleteTodo as deleteTodoApi,
+  toggleTodo as toggleTodoApi,
+} from '../api/todos';
 
 /**
- * useTodos: основной хук работы со списком задач.
- * Держит стейт todos, фильтра и сортировки, синхронизирует данные с localStorage и отдаёт CRUD-операции.
+ * useTodos: основной хук для работы с задачами.
+ * Теперь совмещаем локальный кэш (localStorage) с серверным API и сохраняем старый интерфейс для компонентов.
  */
+const DEFAULT_PAGE = 1; // При первом запросе берём самую свежую страницу
+const DEFAULT_LIMIT = 100; // Этого лимита достаточно для типичных сценариев; при необходимости легко увеличить
+const DEFAULT_API_FILTER: Filter = 'all'; // На сервер просим все задачи, фильтрация на клиенте осталась прежней
+
 export function useTodos() {
-  // Загружаем начальные данные из localStorage (если ничего нет — получим пустой массив)
+  // Загружаем последнее локальное состояние, чтобы интерфейс не мигал до ответа сервера
   const [todos, setTodos] = useState<Todo[]>(() => loadTodos());
   const [filter, setFilter] = useState<Filter>('all');
   const [sort, setSort] = useState<SortOrder>('newFirst');
+  const [isLoading, setIsLoading] = useState(false); // Флаг первой загрузки с бэкенда
+  const [error, setError] = useState<string | null>(null); // Сообщение об ошибке последней операции
 
-  // При любом изменении списка сохраняем его в localStorage
+  // Любые изменения задач зеркалим в localStorage (быстрый кэш и офлайн-режим)
   useEffect(() => {
     saveTodos(todos);
   }, [todos]);
 
-  // Функция генерации ID: предпочитаем crypto.randomUUID, иначе используем Math.random fallback
-  const uuid = useCallback(() => {
-    const anyGlobal: any = globalThis as any;
-    return anyGlobal.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2);
+  // Унифицированный обработчик ошибок: приводим сообщение к понятному виду и сохраняем в состоянии
+  const handleError = useCallback((err: unknown, fallback: string) => {
+    if (err instanceof Error && err.message) {
+      setError(err.message);
+    } else {
+      setError(fallback);
+    }
   }, []);
 
-  // Создать новую задачу и добавить её в начало списка
+  // Подтягиваем задачи с сервера: очищаем ошибку, показываем индикатор загрузки и нормализуем ответ
+  const syncTodos = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { data } = await fetchTodosApi(DEFAULT_PAGE, DEFAULT_LIMIT, DEFAULT_API_FILTER);
+      setTodos(data);
+    } catch (err) {
+      handleError(err, 'Не удалось загрузить список задач');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [handleError]);
+
+  // При первом монтировании получаем актуальное состояние с сервера
+  useEffect(() => {
+    void syncTodos();
+  }, [syncTodos]);
+
+  // Добавление задач: отправляем текст на сервер и сразу подмешиваем ответ в начало списка
   const addTodo = useCallback((text: string) => {
-    const next: Todo = { id: uuid(), text, completed: false, createdAt: new Date() };
-    setTodos((prev) => [next, ...prev]);
-  }, [uuid]);
+    setError(null);
+    createTodoApi(text)
+      .then((created) => {
+        setTodos((prev) => [created, ...prev]);
+      })
+      .catch((err) => handleError(err, 'Не удалось создать задачу'));
+  }, [handleError]);
 
-  // Переключить статус завершённости
+  // Переключение completed: используем ответ сервера, чтобы не разъехались статусы
   const toggleTodo = useCallback((id: string) => {
-    setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)));
-  }, []);
+    setError(null);
+    toggleTodoApi(id)
+      .then((updated) => {
+        setTodos((prev) => prev.map((t) => (t.id === id ? updated : t)));
+      })
+      .catch((err) => handleError(err, 'Не удалось переключить задачу'));
+  }, [handleError]);
 
-  // Удалить задачу
+  // Удаление: после успешного запроса фильтруем локальное состояние
   const removeTodo = useCallback((id: string) => {
-    setTodos((prev) => prev.filter((t) => t.id !== id));
-  }, []);
+    setError(null);
+    deleteTodoApi(id)
+      .then(() => {
+        setTodos((prev) => prev.filter((t) => t.id !== id));
+      })
+      .catch((err) => handleError(err, 'Не удалось удалить задачу'));
+  }, [handleError]);
 
-  // Отредактировать текст задачи
+  // Редактирование: обновляем текст или completed и заменяем элемент на вариант с сервера
   const editTodo = useCallback((id: string, nextText: string) => {
-    setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, text: nextText } : t)));
-  }, []);
+    setError(null);
+    updateTodoApi(id, { text: nextText })
+      .then((updated) => {
+        setTodos((prev) => prev.map((t) => (t.id === id ? updated : t)));
+      })
+      .catch((err) => handleError(err, 'Не удалось обновить задачу'));
+  }, [handleError]);
 
-  // Собираем все значения в один объект, чтобы удобнее импортировать в компоненты
+  // Возвращаем хук в прежнем формате, добавив служебные поля для возможного UI-индикатора
   return useMemo(() => ({
     todos,
     filter,
@@ -55,5 +109,8 @@ export function useTodos() {
     toggleTodo,
     removeTodo,
     editTodo,
-  }), [todos, filter, sort, setFilter, setSort, addTodo, toggleTodo, removeTodo, editTodo]);
+    isLoading,
+    error,
+    reload: syncTodos,
+  }), [todos, filter, sort, setFilter, setSort, addTodo, toggleTodo, removeTodo, editTodo, isLoading, error, syncTodos]);
 }
