@@ -31,7 +31,10 @@ const writeTodos = (todos) => {
 // ======================= API =======================
 
 app.get('/todos', (req, res) => {
-  const { page = 1, limit = 10, filter = 'all' } = req.query;
+  const { page = 1, limit = 10, filter = 'all', sort = 'newFirst' } = req.query;
+  const pageNumber = Math.max(parseInt(page, 10) || 1, 1);
+  const limitNumber = Math.max(parseInt(limit, 10) || 10, 1);
+  const sortOption = sort === 'oldFirst' ? 'oldFirst' : 'newFirst';
   let todos = readTodos();
 
   switch (filter) {
@@ -43,16 +46,27 @@ app.get('/todos', (req, res) => {
       break;
   }
 
-  const startIndex = (page - 1) * limit;
-  const endIndex = page * limit;
+  const getTimestamp = (todo) => {
+    const created = Date.parse(todo.createdAt);
+    if (!Number.isNaN(created)) return created;
+    return Number(todo.id) || 0;
+  };
+
+  todos.sort((a, b) => {
+    const diff = getTimestamp(a) - getTimestamp(b);
+    return sortOption === 'oldFirst' ? diff : -diff;
+  });
+
+  const startIndex = (pageNumber - 1) * limitNumber;
+  const endIndex = startIndex + limitNumber;
   const paginatedTodos = todos.slice(startIndex, endIndex);
 
   res.json({
     data: paginatedTodos,
     total: todos.length,
-    page: Number(page),
-    limit: Number(limit),
-    totalPages: Math.ceil(todos.length / limit),
+    page: pageNumber,
+    limit: limitNumber,
+    totalPages: Math.ceil(todos.length / limitNumber),
   });
 });
 
@@ -126,3 +140,4 @@ app.listen(PORT, HOST, () => {
   PATCH  /todos/:id/toggle
   `);
 });
+
