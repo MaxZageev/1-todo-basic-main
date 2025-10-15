@@ -187,31 +187,53 @@ app.post("/auth/change-password", authenticate, async (req, res) => {
 app.use("/todos", authenticate);
 
 app.get("/todos", (req, res) => {
-  const { page = 1, limit = 10, filter = "all" } = req.query;
-  const pageNumber = Math.max(parseInt(page, 10) || 1, 1);
-  const limitNumber = Math.max(parseInt(limit, 10) || 10, 1);
+  const { page = 1, limit = 10, filter = "all", sort = "newFirst" } = req.query;
 
-  let todos = readData(TODOS_FILE).filter((todo) => todo.userId === req.user.id);
+  const requestedPage = Math.max(parseInt(page, 10) || 1, 1);
+  const requestedLimit = Math.max(parseInt(limit, 10) || 10, 1);
 
-  switch (filter) {
-    case "completed":
-      todos = todos.filter((todo) => todo.completed);
-      break;
-    case "active":
-      todos = todos.filter((todo) => !todo.completed);
-      break;
-  }
+  const userTodos = readData(TODOS_FILE).filter((todo) => todo.userId === req.user.id);
 
-  const startIndex = (pageNumber - 1) * limitNumber;
-  const endIndex = startIndex + limitNumber;
-  const paginatedTodos = todos.slice(startIndex, endIndex);
+  const filteredTodos = userTodos.filter((todo) => {
+    if (filter === "completed") return todo.completed;
+    if (filter === "active") return !todo.completed;
+    return true;
+  });
+
+  const getCreatedAtTimestamp = (todo) => {
+    const ts = new Date(todo.createdAt ?? 0).getTime();
+    return Number.isFinite(ts) ? ts : 0;
+  };
+
+  const normalizedSort =
+    typeof sort === "string" ? sort.toLowerCase() : "newfirst";
+  const sortAscending = normalizedSort === "oldfirst";
+
+  const sortedTodos = [...filteredTodos].sort((a, b) => {
+    const aValue = getCreatedAtTimestamp(a);
+    const bValue = getCreatedAtTimestamp(b);
+
+    if (sortAscending) {
+      return aValue - bValue;
+    }
+
+    return bValue - aValue;
+  });
+
+  const total = sortedTodos.length;
+  const totalPages = Math.max(1, Math.ceil(total / requestedLimit));
+  const pageNumber = Math.min(requestedPage, totalPages);
+
+  const startIndex = (pageNumber - 1) * requestedLimit;
+  const endIndex = startIndex + requestedLimit;
+  const paginatedTodos = sortedTodos.slice(startIndex, endIndex);
 
   res.json({
     data: paginatedTodos,
-    total: todos.length,
+    total,
     page: pageNumber,
-    limit: limitNumber,
-    totalPages: Math.ceil(todos.length / limitNumber),
+    limit: requestedLimit,
+    totalPages
   });
 });
 
